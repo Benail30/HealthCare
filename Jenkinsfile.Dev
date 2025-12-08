@@ -1,0 +1,255 @@
+// Pipeline 2: Complete Build on Dev Push
+// Triggered when: Code is pushed to dev branch
+
+pipeline {
+    agent any
+    
+    environment {
+        COMPOSE_PROJECT_NAME = "healthcare-dev-${env.BUILD_NUMBER}"
+        IMAGE_TAG = "dev-${env.BUILD_NUMBER}"
+        BRANCH_NAME = "dev"
+    }
+
+    stages {
+        stage('1. Checkout') {
+            steps {
+                echo "================================================"
+                echo "Stage 1: Checking out dev branch..."
+                echo "================================================"
+                checkout scm
+                script {
+                    bat "git log -3 --oneline"
+                    bat "git branch -a"
+                }
+            }
+        }
+
+        stage('2. Environment Setup') {
+            steps {
+                echo "================================================"
+                echo "Stage 2: Setting up build environment..."
+                echo "================================================"
+                script {
+                    bat "docker --version"
+                    bat "node --version || echo Node not in PATH"
+                    bat """
+                        docker-compose --version
+                        if errorlevel 1 (
+                            docker compose version
+                        )
+                    """
+                    bat "docker info"
+                }
+            }
+        }
+
+        stage('3. Pre-Build Cleanup') {
+            steps {
+                echo "================================================"
+                echo "Stage 3: Cleaning previous dev builds..."
+                echo "================================================"
+                script {
+                    bat """
+                        docker-compose down -v 2>nul
+                        if errorlevel 1 (
+                            docker compose down -v 2>nul
+                        )
+                    """
+                    bat "docker rm -f healthcare-mysql healthcare-backend healthcare-frontend 2>nul || exit /b 0"
+                    bat "docker network prune -f"
+                    bat "docker volume prune -f"
+                }
+            }
+        }
+
+        stage('4. Build & Tag Images') {
+            parallel {
+                stage('Build Backend - Node 18') {
+                    steps {
+                        echo "Building Backend with Node 18..."
+                        dir('server') {
+                            bat """
+                                docker build -t healthcare-backend:${IMAGE_TAG} ^
+                                            -t healthcare-backend:dev-latest ^
+                                            -t healthcare-backend:latest ^
+                                            --build-arg NODE_VERSION=18 .
+                            """
+                        }
+                        echo "Backend build completed: ${IMAGE_TAG}"
+                    }
+                }
+                stage('Build Frontend - Node 18') {
+                    steps {
+                        echo "Building Frontend with Node 18..."
+                        dir('front') {
+                            bat """
+                                docker build -t healthcare-frontend:${IMAGE_TAG} ^
+                                            -t healthcare-frontend:dev-latest ^
+                                            -t healthcare-frontend:latest ^
+                                            --build-arg NODE_VERSION=18 .
+                            """
+                        }
+                        echo "Frontend build completed: ${IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+
+        stage('5. Deploy to Dev Environment') {
+            steps {
+                echo "================================================"
+                echo "Stage 5: Deploying to dev environment..."
+                echo "================================================"
+                script {
+                    bat """
+                        docker-compose up -d
+                        if errorlevel 1 (
+                            docker compose up -d
+                        )
+                        if errorlevel 1 (
+                            echo Failed to start containers
+                            exit /b 1
+                        )
+                    """
+                    echo "Waiting 45s for all services to stabilize..."
+                    sleep 45
+                    bat "docker ps -a"
+                    bat """
+                        docker-compose ps
+                        if errorlevel 1 (
+                            docker compose ps
+                        )
+                    """
+                }
+            }
+        }
+
+        stage('6. Health Checks & Smoke Tests') {
+            steps {
+                echo "================================================"
+                echo "Stage 6: Running health checks..."
+                echo "================================================"
+                script {
+                    bat """
+                        echo Checking container health...
+                        docker ps --filter "name=healthcare" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"
+                    """
+                    
+                    bat """
+                        echo Running smoke tests...
+                        powershell -ExecutionPolicy Bypass -File .\\scripts\\smoke-test.ps1
+                        if errorlevel 1 (
+                            echo [FAILED] Smoke tests failed on dev!
+                            docker-compose logs --tail=100
+                            exit /b 1
+                        )
+                        echo [PASSED] All health checks passed!
+                    """
+                }
+            }
+        }
+
+        stage('7. Integration Tests') {
+            steps {
+                echo "================================================"
+                echo "Stage 7: Running integration tests..."
+                echo "================================================"
+                script {
+                    bat """
+                        echo Testing API endpoints...
+                        powershell -Command "try { Invoke-WebRequest -Uri http://localhost:3002 -UseBasicParsing -TimeoutSec 10 | Out-Null; exit 0 } catch { exit 1 }"
+                        if errorlevel 1 (
+                            echo Backend API not responding
+                            exit /b 1
+                        )
+                        echo [PASSED] Backend API responding
+                    """
+                    
+                    bat """
+                        echo Testing Frontend...
+                        powershell -Command "try { Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing -TimeoutSec 10 | Out-Null; exit 0 } catch { exit 1 }"
+                        if errorlevel 1 (
+                            echo Frontend not responding
+                            exit /b 1
+                        )
+                        echo [PASSED] Frontend responding
+                    """
+                }
+            }
+        }
+
+        stage('8. Archive Artifacts & Reports') {
+            steps {
+                echo "================================================"
+                echo "Stage 8: Archiving dev build artifacts..."
+                echo "================================================"
+                script {
+                    // Create comprehensive build report
+                    bat """
+                        echo ============================================ > dev-build-report.txt
+                        echo Healthcare Dev Build Report >> dev-build-report.txt
+                        echo ============================================ >> dev-build-report.txt
+                        echo Branch: ${BRANCH_NAME} >> dev-build-report.txt
+                        echo Build Number: ${env.BUILD_NUMBER} >> dev-build-report.txt
+                        echo Build Time: %date% %time% >> dev-build-report.txt
+                        echo Image Tag: ${IMAGE_TAG} >> dev-build-report.txt
+                        echo Status: SUCCESS >> dev-build-report.txt
+                        echo ============================================ >> dev-build-report.txt
+                        echo. >> dev-build-report.txt
+                        echo Docker Images: >> dev-build-report.txt
+                        docker images healthcare-* >> dev-build-report.txt
+                        echo. >> dev-build-report.txt
+                        echo Running Containers: >> dev-build-report.txt
+                        docker ps --filter "name=healthcare" >> dev-build-report.txt
+                    """
+                    
+                    // Get full deployment logs
+                    bat """
+                        docker-compose logs > dev-deployment.log 2>&1
+                        if errorlevel 1 (
+                            docker compose logs > dev-deployment.log 2>&1
+                        )
+                    """
+                    
+                    // Create smoke test report
+                    bat "echo Dev Smoke Tests: PASSED > dev-smoke-report.txt"
+                    bat "echo Integration Tests: PASSED >> dev-smoke-report.txt"
+                    
+                    // Archive all artifacts
+                    archiveArtifacts artifacts: 'dev-build-report.txt, dev-deployment.log, dev-smoke-report.txt', 
+                                   allowEmptyArchive: true,
+                                   fingerprint: true
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "================================================"
+            echo "Dev Pipeline Completed: ${currentBuild.result ?: 'SUCCESS'}"
+            echo "================================================"
+            bat "docker images healthcare-*"
+        }
+        success {
+            echo "✓ Dev Build ${env.BUILD_NUMBER} SUCCESSFUL"
+            echo "Images tagged: ${IMAGE_TAG}, dev-latest, latest"
+            echo "Services running and healthy"
+        }
+        failure {
+            echo "✗ Dev Build ${env.BUILD_NUMBER} FAILED"
+            bat """
+                echo Failure details:
+                docker-compose logs --tail=50
+                if errorlevel 1 (
+                    docker compose logs --tail=50
+                )
+            """
+        }
+        cleanup {
+            echo "Preserving dev containers for testing..."
+            echo "To cleanup manually: docker-compose down -v"
+        }
+    }
+}
+

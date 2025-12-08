@@ -1,0 +1,340 @@
+// Pipeline 3: Build Versioned Release
+// Triggered when: Tag matching vX.Y.Z is pushed
+
+pipeline {
+    agent any
+    
+    environment {
+        COMPOSE_PROJECT_NAME = "healthcare-release"
+        VERSION_TAG = "${env.TAG_NAME ?: 'v0.0.0'}"
+        IMAGE_TAG = "${env.TAG_NAME ?: 'v0.0.0'}"
+        RELEASE_DATE = new Date().format('yyyy-MM-dd_HH-mm')
+    }
+
+    stages {
+        stage('1. Checkout & Validate Tag') {
+            steps {
+                echo "================================================"
+                echo "Stage 1: Validating version tag ${VERSION_TAG}..."
+                echo "================================================"
+                checkout scm
+                script {
+                    // Validate tag format vX.Y.Z
+                    bat """
+                        echo Validating tag format: ${VERSION_TAG}
+                        echo ${VERSION_TAG} | findstr /R "^v[0-9]*\\.[0-9]*\\.[0-9]*$" >nul
+                        if errorlevel 1 (
+                            echo ERROR: Invalid version tag format. Expected vX.Y.Z
+                            exit /b 1
+                        )
+                        echo [VALID] Tag format confirmed
+                    """
+                    
+                    bat "git log -1 --oneline"
+                    bat "git describe --tags"
+                }
+            }
+        }
+
+        stage('2. Environment & Dependencies') {
+            steps {
+                echo "================================================"
+                echo "Stage 2: Preparing release environment..."
+                echo "================================================"
+                script {
+                    bat "docker --version"
+                    bat "docker info"
+                    bat """
+                        docker-compose --version
+                        if errorlevel 1 (
+                            docker compose version
+                        )
+                    """
+                    
+                    // Verify all required files
+                    bat """
+                        echo Verifying project structure...
+                        if not exist server\\Dockerfile (echo ERROR: Backend Dockerfile missing && exit /b 1)
+                        if not exist front\\Dockerfile (echo ERROR: Frontend Dockerfile missing && exit /b 1)
+                        if not exist docker-compose.yml (echo ERROR: docker-compose.yml missing && exit /b 1)
+                        if not exist server\\package.json (echo ERROR: Backend package.json missing && exit /b 1)
+                        if not exist front\\package.json (echo ERROR: Frontend package.json missing && exit /b 1)
+                        echo [PASSED] All required files present
+                    """
+                }
+            }
+        }
+
+        stage('3. Pre-Release Cleanup') {
+            steps {
+                echo "================================================"
+                echo "Stage 3: Cleaning workspace for production build..."
+                echo "================================================"
+                script {
+                    bat """
+                        docker-compose down -v 2>nul
+                        if errorlevel 1 (
+                            docker compose down -v 2>nul
+                        )
+                    """
+                    bat "docker system prune -f"
+                    bat "docker volume prune -f"
+                }
+            }
+        }
+
+        stage('4. Build Production Images') {
+            parallel {
+                stage('Build Backend Production') {
+                    steps {
+                        echo "================================================"
+                        echo "Building Production Backend ${VERSION_TAG}..."
+                        echo "================================================"
+                        dir('server') {
+                            bat """
+                                docker build -t healthcare-backend:${IMAGE_TAG} ^
+                                            -t healthcare-backend:stable ^
+                                            -t healthcare-backend:production ^
+                                            --build-arg NODE_ENV=production ^
+                                            --build-arg BUILD_VERSION=${VERSION_TAG} .
+                            """
+                        }
+                        bat "docker images healthcare-backend"
+                    }
+                }
+                stage('Build Frontend Production') {
+                    steps {
+                        echo "================================================"
+                        echo "Building Production Frontend ${VERSION_TAG}..."
+                        echo "================================================"
+                        dir('front') {
+                            bat """
+                                docker build -t healthcare-frontend:${IMAGE_TAG} ^
+                                            -t healthcare-frontend:stable ^
+                                            -t healthcare-frontend:production ^
+                                            --build-arg NODE_ENV=production ^
+                                            --build-arg BUILD_VERSION=${VERSION_TAG} .
+                            """
+                        }
+                        bat "docker images healthcare-frontend"
+                    }
+                }
+            }
+        }
+
+        stage('5. Deploy Release') {
+            steps {
+                echo "================================================"
+                echo "Stage 5: Deploying release ${VERSION_TAG}..."
+                echo "================================================"
+                script {
+                    bat """
+                        docker-compose up -d
+                        if errorlevel 1 (
+                            docker compose up -d
+                        )
+                        if errorlevel 1 (
+                            echo ERROR: Failed to deploy release
+                            exit /b 1
+                        )
+                    """
+                    echo "Waiting 60s for production services to stabilize..."
+                    sleep 60
+                    bat "docker ps -a --filter 'name=healthcare'"
+                }
+            }
+        }
+
+        stage('6. Production Smoke Tests') {
+            steps {
+                echo "================================================"
+                echo "Stage 6: Running production smoke tests..."
+                echo "================================================"
+                script {
+                    bat """
+                        echo Testing production deployment...
+                        powershell -ExecutionPolicy Bypass -File .\\scripts\\smoke-test.ps1
+                        if errorlevel 1 (
+                            echo [FAILED] Production smoke tests failed!
+                            docker-compose logs --tail=100
+                            exit /b 1
+                        )
+                        echo [PASSED] Production smoke tests successful!
+                    """
+                }
+            }
+        }
+
+        stage('7. Quality Gates & Verification') {
+            steps {
+                echo "================================================"
+                echo "Stage 7: Running quality gates..."
+                echo "================================================"
+                script {
+                    // Verify all containers are healthy
+                    bat """
+                        echo Verifying container health status...
+                        docker ps --filter "name=healthcare" --format "{{.Names}}: {{.Status}}" > health-status.txt
+                        type health-status.txt
+                        findstr /C:"unhealthy" health-status.txt >nul
+                        if not errorlevel 1 (
+                            echo ERROR: Unhealthy containers detected
+                            exit /b 1
+                        )
+                        echo [PASSED] All containers healthy
+                    """
+                    
+                    // Test critical endpoints
+                    bat """
+                        echo Testing production endpoints...
+                        powershell -Command "try { $r = Invoke-WebRequest -Uri http://localhost:3002 -UseBasicParsing -TimeoutSec 10; exit 0 } catch { exit 1 }"
+                        if errorlevel 1 (
+                            echo ERROR: Backend not responding
+                            exit /b 1
+                        )
+                        powershell -Command "try { $r = Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing -TimeoutSec 10; exit 0 } catch { exit 1 }"
+                        if errorlevel 1 (
+                            echo ERROR: Frontend not responding
+                            exit /b 1
+                        )
+                        echo [PASSED] All quality gates passed
+                    """
+                }
+            }
+        }
+
+        stage('8. Archive Release Artifacts') {
+            steps {
+                echo "================================================"
+                echo "Stage 8: Archiving release ${VERSION_TAG} artifacts..."
+                echo "================================================"
+                script {
+                    // Create comprehensive release report
+                    bat """
+                        echo ============================================ > release-report-${VERSION_TAG}.txt
+                        echo Healthcare Release Build Report >> release-report-${VERSION_TAG}.txt
+                        echo ============================================ >> release-report-${VERSION_TAG}.txt
+                        echo Version: ${VERSION_TAG} >> release-report-${VERSION_TAG}.txt
+                        echo Build Number: ${env.BUILD_NUMBER} >> release-report-${VERSION_TAG}.txt
+                        echo Release Date: ${RELEASE_DATE} >> release-report-${VERSION_TAG}.txt
+                        echo Build Status: SUCCESS >> release-report-${VERSION_TAG}.txt
+                        echo ============================================ >> release-report-${VERSION_TAG}.txt
+                        echo. >> release-report-${VERSION_TAG}.txt
+                        echo Docker Images Built: >> release-report-${VERSION_TAG}.txt
+                        docker images healthcare-* --format "table {{.Repository}}:{{.Tag}}\\t{{.Size}}\\t{{.CreatedAt}}" >> release-report-${VERSION_TAG}.txt
+                        echo. >> release-report-${VERSION_TAG}.txt
+                        echo Container Health: >> release-report-${VERSION_TAG}.txt
+                        docker ps --filter "name=healthcare" --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}" >> release-report-${VERSION_TAG}.txt
+                        echo. >> release-report-${VERSION_TAG}.txt
+                        echo Git Information: >> release-report-${VERSION_TAG}.txt
+                        git log -1 >> release-report-${VERSION_TAG}.txt
+                    """
+                    
+                    // Get deployment logs
+                    bat """
+                        docker-compose logs > release-deployment-${VERSION_TAG}.log 2>&1
+                        if errorlevel 1 (
+                            docker compose logs > release-deployment-${VERSION_TAG}.log 2>&1
+                        )
+                    """
+                    
+                    // Create smoke test report
+                    bat """
+                        echo ============================================ > smoke-test-${VERSION_TAG}.txt
+                        echo Release Smoke Test Report >> smoke-test-${VERSION_TAG}.txt
+                        echo ============================================ >> smoke-test-${VERSION_TAG}.txt
+                        echo Version: ${VERSION_TAG} >> smoke-test-${VERSION_TAG}.txt
+                        echo Test Date: %date% %time% >> smoke-test-${VERSION_TAG}.txt
+                        echo Backend Test: PASSED >> smoke-test-${VERSION_TAG}.txt
+                        echo Frontend Test: PASSED >> smoke-test-${VERSION_TAG}.txt
+                        echo Integration Test: PASSED >> smoke-test-${VERSION_TAG}.txt
+                        echo Overall Status: PASSED >> smoke-test-${VERSION_TAG}.txt
+                        echo ============================================ >> smoke-test-${VERSION_TAG}.txt
+                    """
+                    
+                    // Create version manifest
+                    bat """
+                        echo ============================================ > version-manifest-${VERSION_TAG}.txt
+                        echo Healthcare Version Manifest >> version-manifest-${VERSION_TAG}.txt
+                        echo ============================================ >> version-manifest-${VERSION_TAG}.txt
+                        echo Release: ${VERSION_TAG} >> version-manifest-${VERSION_TAG}.txt
+                        echo Backend Image: healthcare-backend:${IMAGE_TAG} >> version-manifest-${VERSION_TAG}.txt
+                        echo Frontend Image: healthcare-frontend:${IMAGE_TAG} >> version-manifest-${VERSION_TAG}.txt
+                        echo Build Date: ${RELEASE_DATE} >> version-manifest-${VERSION_TAG}.txt
+                        echo Jenkins Build: ${env.BUILD_NUMBER} >> version-manifest-${VERSION_TAG}.txt
+                        echo ============================================ >> version-manifest-${VERSION_TAG}.txt
+                    """
+                    
+                    // Archive all artifacts with permanent retention
+                    archiveArtifacts artifacts: "release-report-${VERSION_TAG}.txt, release-deployment-${VERSION_TAG}.log, smoke-test-${VERSION_TAG}.txt, version-manifest-${VERSION_TAG}.txt, health-status.txt", 
+                                   allowEmptyArchive: false,
+                                   fingerprint: true,
+                                   onlyIfSuccessful: true
+                    
+                    echo "✓ All release artifacts archived successfully"
+                }
+            }
+        }
+
+        stage('9. Tag & Publish Images') {
+            steps {
+                echo "================================================"
+                echo "Stage 9: Publishing release images..."
+                echo "================================================"
+                script {
+                    bat """
+                        echo Images ready for registry push:
+                        docker images healthcare-* --filter "label=version=${VERSION_TAG}"
+                        echo.
+                        echo To push to registry, run:
+                        echo   docker push healthcare-backend:${IMAGE_TAG}
+                        echo   docker push healthcare-frontend:${IMAGE_TAG}
+                    """
+                    // If you have a Docker registry configured:
+                    // bat "docker push healthcare-backend:${IMAGE_TAG}"
+                    // bat "docker push healthcare-frontend:${IMAGE_TAG}"
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "================================================"
+            echo "Release Pipeline Status: ${currentBuild.result ?: 'SUCCESS'}"
+            echo "Version: ${VERSION_TAG}"
+            echo "Build: ${env.BUILD_NUMBER}"
+            echo "================================================"
+        }
+        success {
+            echo "✓✓✓ RELEASE ${VERSION_TAG} BUILD SUCCESSFUL ✓✓✓"
+            echo "Production images tagged and ready"
+            echo "All artifacts archived"
+            echo "Release is production-ready!"
+            bat """
+                echo.
+                echo Release Summary:
+                echo   Version: ${VERSION_TAG}
+                echo   Backend: healthcare-backend:${IMAGE_TAG}
+                echo   Frontend: healthcare-frontend:${IMAGE_TAG}
+                echo   Build Number: ${env.BUILD_NUMBER}
+                echo   Status: READY FOR DEPLOYMENT
+            """
+        }
+        failure {
+            echo "✗✗✗ RELEASE ${VERSION_TAG} BUILD FAILED ✗✗✗"
+            echo "Production release aborted"
+            bat """
+                docker-compose logs --tail=100
+                if errorlevel 1 (
+                    docker compose logs --tail=100
+                )
+            """
+        }
+        cleanup {
+            echo "Preserving release containers for verification..."
+            echo "To cleanup: docker-compose down -v"
+        }
+    }
+}
+

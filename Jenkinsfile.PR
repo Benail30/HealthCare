@@ -1,0 +1,190 @@
+// Pipeline 1: Build & Smoke on Pull Request (to dev branch)
+// Triggered when: PR opened/updated targeting dev branch
+
+pipeline {
+    agent any
+    
+    environment {
+        COMPOSE_PROJECT_NAME = "healthcare-pr-${env.CHANGE_ID}-${env.BUILD_NUMBER}"
+        IMAGE_TAG = "pr-${env.CHANGE_ID}"
+    }
+
+    stages {
+        stage('1. Checkout') {
+            steps {
+                echo "================================================"
+                echo "Stage 1: Checking out PR #${env.CHANGE_ID}..."
+                echo "================================================"
+                checkout scm
+                script {
+                    bat "git log -1 --oneline"
+                }
+            }
+        }
+
+        stage('2. Setup & Validation') {
+            steps {
+                echo "================================================"
+                echo "Stage 2: Validating environment..."
+                echo "================================================"
+                script {
+                    bat "docker --version"
+                    bat """
+                        docker-compose --version
+                        if errorlevel 1 (
+                            docker compose version
+                        )
+                    """
+                    // Verify required files exist
+                    bat "if not exist server\\Dockerfile exit /b 1"
+                    bat "if not exist front\\Dockerfile exit /b 1"
+                    bat "if not exist docker-compose.yml exit /b 1"
+                }
+            }
+        }
+
+        stage('3. Cleanup Previous Builds') {
+            steps {
+                echo "================================================"
+                echo "Stage 3: Cleaning up old resources..."
+                echo "================================================"
+                script {
+                    bat """
+                        docker-compose down -v 2>nul
+                        if errorlevel 1 (
+                            docker compose down -v 2>nul
+                        )
+                    """
+                    bat "docker system prune -f || exit /b 0"
+                }
+            }
+        }
+
+        stage('4. Build Images') {
+            parallel {
+                stage('Build Backend') {
+                    steps {
+                        echo "Building Backend Image (Tag: ${IMAGE_TAG})..."
+                        dir('server') {
+                            bat "docker build -t healthcare-backend:${IMAGE_TAG} -t healthcare-backend:pr-latest ."
+                        }
+                    }
+                }
+                stage('Build Frontend') {
+                    steps {
+                        echo "Building Frontend Image (Tag: ${IMAGE_TAG})..."
+                        dir('front') {
+                            bat "docker build -t healthcare-frontend:${IMAGE_TAG} -t healthcare-frontend:pr-latest ."
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('5. Run Containers') {
+            steps {
+                echo "================================================"
+                echo "Stage 5: Starting containers for smoke test..."
+                echo "================================================"
+                script {
+                    bat """
+                        docker-compose up -d
+                        if errorlevel 1 (
+                            docker compose up -d
+                        )
+                    """
+                    echo "Waiting 45s for services to initialize..."
+                    sleep 45
+                    bat "docker ps -a"
+                }
+            }
+        }
+
+        stage('6. Smoke Tests') {
+            steps {
+                echo "================================================"
+                echo "Stage 6: Running smoke tests..."
+                echo "================================================"
+                script {
+                    bat """
+                        echo Running PowerShell smoke test...
+                        powershell -ExecutionPolicy Bypass -File .\\scripts\\smoke-test.ps1
+                        if errorlevel 1 (
+                            echo [FAILED] Smoke tests failed!
+                            docker-compose logs backend
+                            docker-compose logs frontend
+                            exit /b 1
+                        )
+                        echo [PASSED] All smoke tests passed!
+                    """
+                }
+            }
+        }
+
+        stage('7. Archive Results') {
+            steps {
+                echo "================================================"
+                echo "Stage 7: Archiving PR build artifacts..."
+                echo "================================================"
+                script {
+                    // Create test report
+                    bat """
+                        echo ============================================ > pr-smoke-report.txt
+                        echo Healthcare PR Build Report >> pr-smoke-report.txt
+                        echo ============================================ >> pr-smoke-report.txt
+                        echo PR Number: ${env.CHANGE_ID} >> pr-smoke-report.txt
+                        echo Build Number: ${env.BUILD_NUMBER} >> pr-smoke-report.txt
+                        echo Build Time: %date% %time% >> pr-smoke-report.txt
+                        echo Status: PASSED >> pr-smoke-report.txt
+                        echo ============================================ >> pr-smoke-report.txt
+                    """
+                    
+                    // Get container logs
+                    bat """
+                        docker-compose logs > pr-deployment.log 2>&1
+                        if errorlevel 1 (
+                            docker compose logs > pr-deployment.log 2>&1
+                        )
+                    """
+                    
+                    // Archive artifacts
+                    archiveArtifacts artifacts: 'pr-smoke-report.txt, pr-deployment.log', 
+                                   allowEmptyArchive: true,
+                                   fingerprint: true
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "================================================"
+            echo "PR Pipeline Status: ${currentBuild.result ?: 'SUCCESS'}"
+            echo "================================================"
+        }
+        success {
+            echo "✓ PR #${env.CHANGE_ID} - Build & Smoke Tests PASSED"
+            echo "Ready for code review!"
+        }
+        failure {
+            echo "✗ PR #${env.CHANGE_ID} - Build FAILED"
+            echo "Please fix issues before merging."
+            bat """
+                docker-compose logs
+                if errorlevel 1 (
+                    docker compose logs
+                )
+            """
+        }
+        cleanup {
+            echo "Cleaning up PR environment..."
+            bat """
+                docker-compose down -v 2>nul
+                if errorlevel 1 (
+                    docker compose down -v 2>nul
+                )
+            """
+        }
+    }
+}
+
