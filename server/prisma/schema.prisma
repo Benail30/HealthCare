@@ -1,0 +1,229 @@
+
+
+/////////////////////////////////////////////////////////////////////////
+
+
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+enum Role {
+  doctor
+  user
+
+}
+model User {
+    id          Int   @unique     @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String      @unique
+  password    String
+  phoneNumber String
+  imageUrl    String
+  appointments Appointment[]
+  ratingsComments RatingsComment[]
+  role  Role @default(user)
+  blogs       Blog[]
+  doctor      Doctor?  @relation(fields: [doctorId], references: [id])
+  doctorId    Int?     @unique
+  specialityId   Int? @unique
+  speciality Speciality? @relation(fields: [specialityId], references: [id])
+  rooms       RoomUser[]
+  messages    Message[]
+}
+model RoomUser {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int // relation scalar field (used in the `@relation` attribute above)
+  room   Room @relation(fields: [roomId], references: [id])
+  roomId Int // relation scalar field (used in the `@relation` attribute above)
+
+
+  @@id([userId, roomId])
+}
+model Speciality {
+  id          Int      @id @default(autoincrement())
+  speciality  String
+  doctors User[]
+}
+
+model Doctor {
+  id          Int      @id @default(autoincrement())
+  appointments Appointment[]
+  user  User?
+  days DayAvailability[]
+
+}
+
+
+model Room {
+  id          Int   @unique     @id @default(autoincrement())
+  messages    Message[]
+  users       RoomUser[]
+}
+
+model Message {
+  id          Int   @unique     @id @default(autoincrement())
+  roomId      Int 
+  content     String    
+  room        Room   @relation(fields: [roomId], references: [id])
+  userId      Int    
+  user        User    @relation(fields: [userId], references: [id])
+}
+
+model Appointment {
+  id                  Int       @id @default(autoincrement())
+  appointmentTime     DateTime
+  hour                availabilHours
+  status              AppointmentStatus @default(pending)
+  paymentStatus       PaymentStatus    @default(unpaid)
+  appointmentDepartment String
+  doctorId             Int
+  doctor              Doctor      @relation(fields: [doctorId], references: [id])
+  userId              Int
+  user                User        @relation(fields: [userId], references: [id])
+
+}
+
+model RatingsComment {
+  id      Int    @id @default(autoincrement())
+  rating  Int
+  review  String
+  imageSrc String
+  name    String
+  userId  Int
+  user    User   @relation(fields: [userId], references: [id])
+}
+
+model Admin {
+  id       Int     @id @default(autoincrement())
+  username String  @unique
+  email    String  @unique
+  password String
+}
+
+model Payments {
+  id          Int     @id @default(autoincrement())
+  amount      Float
+  paymentDate DateTime
+}
+
+model Blog {
+  id        Int      @id @default(autoincrement())
+  title     String
+  text      String
+  imageUrl  String
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  comments  Comment[]
+}
+
+model Comment {
+  id      Int     @id @default(autoincrement())
+  author  String
+  comment String
+  timestamp DateTime
+  blogId  Int
+  blog    Blog    @relation(fields: [blogId], references: [id])
+}
+
+model Product {
+  id       Int    @id @default(autoincrement())
+  name     String
+  price    Float
+  imageUrl String
+  category String
+}
+
+model DayAvailability {
+  id          Int       @id @default(autoincrement())
+  doctor      Doctor    @relation(fields: [doctorId], references: [id])
+  doctorId    Int
+  day         DateTime 
+  hours       Hours[]
+  availability Boolean   @default(true)
+ // Optional: depends on the queries you expect to run
+}
+model Hours{
+id          Int       @id @default(autoincrement())
+day      DayAvailability    @relation(fields: [dayId], references: [id])
+dayId    Int
+hour     availabilHours
+availability Boolean   @default(true)
+}
+enum availabilHours {
+  H0800 
+  H0900 
+  H1000 
+  H1100 
+  H1200 
+  H1300 
+  H1400 
+  H1500 
+  H1600 
+}
+
+enum UserType {
+  patient
+  doctor
+}
+
+enum AppointmentStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum PaymentStatus {
+  paid
+  unpaid
+}
+
+model Patient {
+  id       Int    @id @default(autoincrement())
+  date      String
+  name      String
+  gender    String
+  disease   String
+  status    String
+  image     String
+}
+
+
+model Doctorr{
+  id            Int      @id @default(autoincrement())
+  name          String
+  gender        String
+  specialization String
+  occupation    String
+  rating        Float
+  image         String
+  // Add other fields as needed
+}
+
+model UserReview {
+  id        Int      @id @default(autoincrement())
+  name      String
+  occupation String
+  review    String
+  rating    Float
+  image     String
+}
+model Todayapp {
+  id        Int      @id @default(autoincrement())
+  name    String
+  date    String
+  time    String
+  type    String
+  image   String
+}

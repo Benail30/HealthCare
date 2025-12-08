@@ -1,0 +1,175 @@
+.reviews {
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+  }
+  
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .review {
+    background-color: #f3ebeb;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .review-name {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .review-occupation {
+    font-size: 16px;
+    color: #666;
+  }
+  
+  .review-date {
+    font-size: 14px;
+    color: #11822f;
+  }
+  
+  .review-body {
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  
+  .review-rating {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffb300;
+  }
+  .star {
+    color: #ffb300; 
+    font-size: 25px
+  }
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f2f2f2;
+    padding: 10px;
+    border-bottom: 1px solid #353232;
+    
+  }
+  
+  .toolbar button {
+    background-color: transparent;
+    border: none;
+    font-size: 16px;
+    color: #484545;
+    cursor: pointer;
+    font-weight: bold;
+
+  }
+  
+  .toolbar button:hover {
+    background-color: rgb(170, 206, 220);
+    }
+    .doctor-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      width: 50%;
+      height: 600px;
+      background-color: #f2f2f2;
+      border-radius: 40px;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+      padding: 10px;
+      margin-right: 50px;
+      margin-left: -450px;
+      margin-top : 100px;
+    }
+    
+    .doctor-details {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+    }
+    
+    .doctor-info {
+      margin-left: 30px;
+    }
+    
+    .doctor-info h1 {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .doctor-info p {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    
+    .star-rating {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+    
+    .star {
+      font-size: 30px;
+      color: #ffc107;
+    }
+    
+    .star-rating .star:not(:last-child)::after {
+      content: '';
+      display: block;
+      width: 10px;
+      height: 10px;
+      background-color: #f2f2f2;
+      margin: 0 5px;
+    }
+    .img {
+      max-width: 100px; 
+      max-height: 100px; 
+      border-radius: 50%;
+
+    }
+  .profile{
+    font-weight: bold;
+    font-size: 40px;
+    margin-left: -400px;
+
+
+  }
+ .reviews-container {
+  margin-top: 2px; 
+}
+.toolbar-container{
+  margin-top: -550px; 
+
+}
+.batouna {
+  background-color: #8a58c8; 
+  border: none; 
+  color: white; 
+  padding: 15px 32px; 
+  text-align: center;
+  text-decoration: none; 
+  display: inline-block; 
+  font-size: 16px; 
+  margin: 4px 2px;
+  cursor: pointer; 
+  border-radius: 12px; 
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); 
+}
+
+.batouna:hover {
+  background-color: #3e8e41;
+}
+

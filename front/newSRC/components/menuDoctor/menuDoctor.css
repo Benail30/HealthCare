@@ -1,0 +1,48 @@
+.container_doctor_profil {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .content_doctor_profil {
+    width: 250px;
+    padding: 20px;
+  }
+  
+  .list_profil_doctor {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .icon_list {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .icon_list:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .text_sid {
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .active {
+    background-color: #007bff;
+    color: #fff;
+  }
+  
+  .active .text_sid {
+    font-weight: bold;
+  }
+  
+  .icon_list i {
+    font-size: 20px;
+    margin-right: 10px;
+  }
+  

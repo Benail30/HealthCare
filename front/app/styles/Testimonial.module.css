@@ -1,0 +1,62 @@
+.container {
+    background-color: #ECECEC;
+    padding: 0;
+    margin: 0;
+}
+.title {
+    color: #007E85;
+    text-align: center;
+}
+.description {
+    color: #5D5D5D;
+    text-align: center;
+    font-size: 15px;
+    margin-bottom: 4em;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    margin-left: 130px;
+    margin-right: 40px;
+}
+.card {
+    background-color: #FFFFFF;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+.imageContainer {
+    text-align: center;
+    margin-top: 20px;
+}
+.roundImage {
+    border-radius: 50%;
+}
+.content {
+    padding: 20px;
+}
+.trustSection, .newsletter {
+    text-align: center;
+    margin-top: 20px;
+}
+.input, .subscribeButton {
+    padding: 10px;
+    border-radius: 11px;
+}
+.input {
+    margin-right: 10px;
+    border: none;
+    width: 400px;
+}
+.subscribeButton {
+    background-color: #007E85;
+    color: white;
+    border: none;
+    cursor: pointer;
+}

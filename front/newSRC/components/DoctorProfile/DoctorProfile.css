@@ -1,0 +1,105 @@
+.doctor-profile-container {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(170, 18, 18, 0.1);
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.doctor-profile-card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(207, 8, 8, 0.05);
+  margin-bottom: 20px;
+}
+
+.doctor-profile-card .card-body {
+  padding: 20px;
+}
+
+.card-title {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.card-text {
+  color: #666;
+  font-size: 16px;
+}
+
+.card img.doctor-profile-img-top {
+  width: 100%;
+  height: auto;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.badge {
+  background-color: #007E85;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .doctor-profile-container {
+    padding: 40px;
+    margin-top: 40px;
+  }
+}
+
+.top-left-logo {
+  width: 100px;
+  height: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.doctor-profile-picture {
+  max-width: 100px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+}
+
+/* Existing hover styles */
+.nav-link:hover, .btn-link:hover {
+  background-color: #e9f1f7; 
+  color: #007E85; 
+  cursor: pointer; 
+}
+
+.btn-primary:hover {
+  background-color: #005f73; 
+  border-color: #005f73; 
+}
+
+/* Spacing and hover style updates */
+.nav-item:not(:last-child) {
+  margin-right: 10px;
+}
+
+.nav-item .nav-link:hover,
+.nav-item button:hover {
+  background-color: #005f73;
+  color: white ;
+}
+
+.btn-primary:not(:last-child) {
+  margin-right: 10px; /* Spacing between buttons */
+}
+
+/* Additional style for button hover state */
+.btn-primary {
+  background-color: #005f73; /* Normal state background */
+  border-color: #005f73; /* Normal state border */
+}
+
+.btn-primary:hover {
+  background-color: #004a5f; /* Slightly darker for hover */
+  border-color: #004a5f;
+}

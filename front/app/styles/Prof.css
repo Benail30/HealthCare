@@ -1,0 +1,345 @@
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.appointment-request,
+.calendar-container {
+  width: 48%; 
+}
+
+.appointment-request {
+  margin-right: 2%; 
+}
+
+.appointment-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-header,
+.table-data {
+  padding: 8px; 
+  text-align: center; 
+  font-size: 16px;
+}
+
+.table-header.table-gender {
+  font-weight: bold;
+}
+
+.table-row {
+  border: 1px solid #ddd;
+}
+
+.table-data {
+  font-weight: normal; 
+}
+
+.table-data span {
+  font-weight: bold; 
+}
+
+.table-data:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.status-button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.confirmed {
+  background-color: rgb(185, 223, 241);
+  color: rgb(34, 99, 102);
+}
+
+.confirmed:hover {
+  background-color: rgb(182, 211, 182);
+}
+
+.declined {
+  background-color: rgb(235, 205, 233);
+  color: red;
+}
+
+.declined:hover {
+  background-color: rgb(218, 177, 177);
+}
+
+.appointment-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-top: 5px;
+  vertical-align: middle;
+}
+
+.calendar-container {
+  border: 1px solid #ddd;
+  border-radius: 50px;
+  padding: 10px;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 200px; 
+}
+
+.react-calendar {
+  width: 100%;
+}
+
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.react-calendar__navigation button {
+  padding: 5px;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.1);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.react-calendar__navigation button:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.react-calendar__navigation button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.react-calendar__month-view__weekdays {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px 0;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 5px;
+}
+
+.react-calendar__tile {
+  padding: 5px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.react-calendar__tile:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.react-calendar__tile--active {
+  background-color: #f0b949;
+  color: white;
+}
+
+.appointment-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: red;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.welcome-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.welcome-text {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.have-a-nice-day {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.patient-info-content {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: #df5353;
+}
+
+.patient-info-text {
+  font-size: 48px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.patient-info-label {
+
+  font-size: 18px;
+  color: rgb(225, 221, 221);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.patient-info-content-appointments {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: #785bc0;
+}
+
+.patient-info-text-appointments {
+  font-size: 48px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.patient-info-label-appointments {
+  font-size: 18px;
+  color: rgb(225, 221, 221);
+  margin: 0;
+  text-transform: uppercase;
+}
+.patient-info-content-clinic {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: #b8bb13;
+}
+
+.patient-info-text-clinic {
+  font-size: 48px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.patient-info-label-clinic {
+  font-size: 18px;
+  color: rgb(225, 221, 221);
+  margin: 0;
+  text-transform: uppercase;
+}
+.patient-info-content-video {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background-color: #49cad3;
+}
+
+.patient-info-text-video {
+  font-size: 48px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+}
+
+.patient-info-label-video {
+  font-size: 18px;
+  color: rgb(225, 221, 221);
+  margin: 0;
+  text-transform: uppercase;
+}
+.patient-info-container {
+  display: flex;
+  justify-content: flex-start; 
+  margin-bottom: -120px; 
+  margin-left: 300px; 
+}
+
+
+.patient-appointments-container {
+  order: 1; 
+}
+
+.patient-clinic-container{
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 120px; 
+
+
+
+}
+.patient-video-container {
+  display: flex;
+  justify-content: flex-start; 
+  align-items: flex-start; 
+  margin-bottom: 100px; 
+  margin-left: 0px; 
+}
+
+
+.containerr {
+  display: flex;
+  flex-wrap: wrap; 
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.appointment-request,
+.calendar-container {
+  width: 48%; 
+}
+
+.appointment-request {
+  margin-right: 2%; 
+}
+.button-like {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px 16px;
+  text-align: left;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  outline: none;
+  transition: background-color 0.3s ease;
+  font-weight: bold; 
+}
+
+.button-like:hover {
+  background-color: #57ce7d;
+}
+.containerrr {
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-bottom: 2px solid #ccc;
+  max-width: 200px;
+  margin: 150px 0 0 20px; 
+}
+
+
+
+

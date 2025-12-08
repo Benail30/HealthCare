@@ -1,0 +1,63 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: healthcare-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Baha1998@
+      MYSQL_DATABASE: doctor
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pBaha1998@"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthcare-network
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: healthcare-backend
+    environment:
+      PORT: 3002
+      DATABASE_URL: mysql://root:Baha1998@@mysql:3306/doctor
+      SECRET_KEY: your-secret-key-change-this-in-production
+      CLOUDINARY_CLOUD_NAME: duekcetwe
+      CLOUDINARY_API_KEY: 313496654712626
+      CLOUDINARY_API_SECRET: LTs6VHjFAjSIorhnPJ-w8iqwffo
+    ports:
+      - "3002:3002"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: healthcare-frontend
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_BASE: http://localhost:3002/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  healthcare-network:
+    driver: bridge
+

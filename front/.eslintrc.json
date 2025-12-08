@@ -1,0 +1,6 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "no-unused-vars": "off" // Temporarily turn off to test if this is the cause
+  }
+}

@@ -1,0 +1,65 @@
+.pharmacy-page {
+    background-color: #f9f9f9; 
+    padding: 20px 0; 
+}
+
+.container {
+    margin-top: 2rem; 
+}
+
+
+.card {
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+    border: none; 
+    margin-bottom: 30px; 
+}
+
+.card:hover {
+    transform: translateY(-10px); 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.card img {
+    height: 250px; 
+    object-fit: cover; 
+    width: 100%; 
+    border-top-left-radius: .25rem; 
+    border-top-right-radius: .25rem;
+}
+
+.card-body {
+    padding: 20px; 
+    text-align: center; 
+}
+
+.title {
+    margin-top: 15px; 
+    font-size: 1.4rem; 
+    color: #007bff; 
+}
+
+.clickable {
+    transition: all 0.3s ease; 
+}
+
+.clickable:hover {
+    transform: scale(1.05); 
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .check-cart-btn {
+    float: right; 
+    background-color: #007E85;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    text-decoration: none;
+  } 
+  

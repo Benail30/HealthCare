@@ -1,0 +1,91 @@
+
+.imgBlogDetail{
+    height: 350px;
+    float: left;
+    margin-left: 40px;
+    border-radius: 12px;
+    margin-top:100px;
+}
+.textupBlogD{
+    color: #8492a6 !important;
+
+}
+.textDownBlogd{
+    float: left;
+    margin-left: 40px;
+margin-top: 40px;
+    color: #8492a6 !important;
+     
+}
+.SideBarr{
+    float: right;
+    margin-top: 80px;
+    margin-right: 50px;
+
+
+}
+
+.searchBlog{
+    margin-bottom: 350px;
+}
+.Recent-post{
+    margin-left: -300px;
+}
+.Comment {
+    clear: both; /* Clear floats */
+    margin-top: 20px; /* Adjust margin as needed */
+    margin-left: -400px;
+
+  }
+#outlined-basic{
+    margin-left: 100px;
+}
+.content{
+    color: #8492a6 !important;
+margin-left: 200px;
+padding-top:9
+}
+
+.form{
+   float: left;
+   margin-left: 30px;
+   
+}
+.send{
+    color: white;
+    background-color:rgba(0, 126, 133, 1);
+}
+.Leave-CommentN{
+    margin-left: -900px;
+    
+}
+.yout-comment{
+    height: 150px;
+}
+.LastBlogsDiv{
+    display: flex;
+gap: 10px;
+}
+.LastBlogs1{
+    height: 60px;
+    margin-left: -250px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+.LastBlogs2{
+    height: 60px;
+    margin-left: -250px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+.LastBlogs3{
+    height: 60px;
+    margin-left: -250px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+.LastBlogsP{
+    font-size: 14px;
+     margin-top: 20px;
+     margin-right: -10px;
+}

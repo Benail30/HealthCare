@@ -1,0 +1,103 @@
+.footer-container {
+    background-color: #007e85;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    padding-top: 8rem;
+    height: 25rem;
+  }
+  .health-footer {
+    color: white;
+    text-align: center;
+    font-family: bold;
+    font-size: 26px;
+    /* font-style: normal; */
+    /* font-weight: 600; */
+    /* line-height: normal; */
+    letter-spacing: 2.34px;
+    text-transform: capitalize;
+    /* margin-top: 0; */
+  }
+  .footer_p {
+    cursor: pointer;
+    color: white;
+    text-align: center;
+    font-feature-settings: "clig" off, "liga" off;
+    /* Text single/200/Regular */
+    font-family: DM Sans;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 18px;
+    display: flex;
+    align-items: center;
+    /* opacity: 0.5 ; */
+  }
+  .footer_span {
+    cursor: pointer;
+    color: white;
+    font-family: DM Sans;
+    font-size: 22px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 20px;
+    margin-bottom: 1rem;
+  }
+  .logo-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    margin-top: -1.5rem;
+  }
+  
+  .followus {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    /* justify-content: center; */
+    justify-content: start;
+    gap: 0;
+    
+  }
+  .icon-div {
+    display: flex;
+    align-items: center;
+    padding: 0;
+  }
+  .icon-div svg {
+    margin-right: 10px;
+    padding: 0;
+  }
+  
+  .logo-health-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .logo-health-footer img {
+    width: 55px;
+    height: 50px;
+  }
+  
+  .text {
+    opacity: 0.8;
+  }
+  
+  
+  .support{
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem
+  }
+  .product{
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem
+  }
+  .company{
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem
+  }

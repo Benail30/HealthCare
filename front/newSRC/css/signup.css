@@ -1,0 +1,39 @@
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form select {
+  display: block;
+  width: calc(100% - 20px); /* Adjusted width to account for padding */
+  padding: 10px;
+  margin: 0 auto 20px auto; /* Centered and adjusted margin */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+form button[type="submit"] {
+  display: block;
+  width: calc(100% - 20px); /* Adjusted width to account for padding */
+  margin: 0 auto; /* Centered */
+  background-color: #007E85;
+  color: white;
+  font-size: 1.2rem;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+form p,
+form a {
+  font-size: 1rem;
+  color: #007E85;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+form a:hover {
+  text-decoration: underline;
+}

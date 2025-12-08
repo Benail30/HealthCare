@@ -1,0 +1,72 @@
+.patient-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.header-row {
+  background-color: #4caf50; 
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.cell-header,
+.cell {
+  padding: 15px; 
+  border: 1px solid #dddddd;
+  text-align: center; 
+}
+
+.cell:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.cell:last-child {
+  border-right: none;
+}
+
+.cell:first-child {
+  border-left: none;
+}
+
+.cell-header {
+  color: #ffffff; 
+}
+
+.patient-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+  margin-right: 12px;
+}
+
+.patient-image-container {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+  background-color: #dddddd;
+}
+
+.patient-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.patient-name-cell,
+.cell {
+  text-align: center;
+}
+
+.patient-table th {
+  font-size: 1.1rem;
+}
+
+.patient-table td {
+  font-size: 1rem; 
+}
+
+

@@ -1,0 +1,65 @@
+/* PostBlog.css */
+.post-blog-card {
+    max-width: 1200px;
+    width: 90%;
+    margin: 50px auto;
+    padding: 50px;
+    border-radius: 8px;
+   
+    
+}
+
+.post-blog-form h2, label {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.post-blog-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.post-blog-form input[type="text"],
+.post-blog-form textarea {
+    width: 100%;
+    max-width: 600px; 
+    padding: 15px;
+    border: 1px solid #7f8c8d;
+    border-radius: 4px;
+    
+    color: #ecf0f1;
+}
+
+.upload-image-btn, .submit-blog-btn {
+    padding: 10px 30px; 
+    width: auto; 
+    font-size: 18px;
+    background-color: #16a085;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.upload-image-btn:hover, .submit-blog-btn:hover {
+    background-color: #1abc9c;
+}
+
+.image-upload-label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.post-blog-header {
+    text-align: center;
+    
+}
+
+
+.post-blog-label {
+    font-size: 1.2em; 
+    
+}

@@ -1,0 +1,252 @@
+.body{
+    width: 100%;  
+}
+#Healthcare{
+    color: rgba(0, 126, 133, 1);
+    font-size: x-large;
+}
+#h1{
+    font-size: x-large;
+
+}
+
+.bt{
+    margin-right: -200px;
+    transition-duration: 0.5s;
+    background-color: rgba(0, 126, 133, 1);
+     border: rgba(0, 126, 133, 1);
+     color: white;
+     width: 100px;
+     height: 40px;
+     margin-left: 45px;
+     border-radius: 12px;
+     
+}
+
+#divplay{
+    display: flex;
+    align-items: center; 
+  
+}
+
+#play{
+  margin-right: 20px;
+  font-size:xx-large;
+    padding-left: 250px;
+    color: rgba(0, 126, 133, 1);
+}
+.divSearch{
+    height: 110px;
+    width: 60%;
+    margin-left: 270px;
+    border-radius: 8px;
+    margin-top: 140px;
+    background-color: rgba(0, 126, 133, 1);
+    padding: auto;
+    width: 65%;
+    display: flex;
+    align-items: center;
+}
+.search{
+    display: flex;
+
+}
+.ButtonSearch:hover {
+    background-color:rgb(6, 70, 93); 
+    color: white;
+  
+  }
+.ButtonSearch{
+    /* transition-duration: 0.5s; */
+   background-color: rgba(0, 126, 133, 1);
+    border: rgba(0, 126, 133, 1);
+    color: white;
+    width: 100px;
+    height: 40px;
+    /* margin-top: 10px; */
+    margin-left: 10px;
+    border-radius: 12px; 
+
+} 
+#available{
+    margin-left:20px ;
+}
+#switch{
+    margin-top: 10px;
+    margin-left: 20px;
+   display:flex;
+}
+h3{
+    margin-left: 20px;
+}
+.input{
+    border-color: rgba(0, 126, 133, 1);
+    border-radius: 8px;
+    height: 35px;
+margin-left: 20px;
+margin-top: 10px;
+
+
+}
+.doctorImg{
+    width: 340px; 
+margin-right: 120px;
+
+}
+.DoctorImg{
+    float: right;
+}
+.img2{
+    height: 300px;
+    float: right;
+    /* padding-right: 80px; */
+    border-radius: 20px;
+    /* padding-right: 100px; */
+    margin-right: 79px;
+    margin-top: 5%;
+}
+.title{
+    margin-top: 100px;
+text-align: left;
+margin-left: 50px;
+}
+
+#numbers{
+    word-spacing: 120px;
+    display:inline-flex;
+}
+#words{
+    display :inline-flex;
+        
+    } 
+#words1{
+    margin-right: 40px;
+}
+#words2{
+    margin-right: 20px;
+}
+#words3{
+    margin-right: 20px;
+}
+#words4{
+    margin-right: 50px;
+}
+.divStart{
+    margin-left: 50px;
+}
+.get-Started{
+    transition-duration: 0.5s;
+    border-radius: 40px;
+    border: rgba(0, 126, 133, 1);
+    background-color: rgba(0, 126, 133, 1);
+    height: 40px;
+    width: 100px;
+    color:white;
+
+}
+.Talk-To-Sales{
+    transition-duration: 0.5s;
+    border-radius: 40px;
+    border: white;
+    background-color:white;
+    height: 40px;
+    width: 100px; 
+    margin-left: 10px;
+}
+.Talk-To-Sales:hover {
+    background-color: #04AA6D; 
+    color: white;
+   
+  }
+.get-Started:hover {
+    background-color:rgb(6, 70, 93); 
+    color: white;
+  }
+  .divResult{
+    padding-top: 50px;
+  }
+  .divStart{
+    padding-top: 100px;
+  }
+  .service{
+    padding-top: 150px;
+  }
+
+
+
+
+
+
+
+  .container {
+    padding: 20px;
+  }
+  
+  .doctor-item {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
+  
+  .pagination {
+    display: flex;
+    list-style: none;
+    justify-content: center;
+  }
+  
+  .page-item {
+    margin: 0 5px;
+  }
+  
+  .page-link {
+    background: none;
+    border: none;
+    color: blue;
+    cursor: pointer;
+  }
+
+
+
+
+
+
+  .doctor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); /* Increase the minimum size of the cards */
+    gap: 20px; /* Adjust the gap as needed */
+    padding: 20px; /* Ensure there's padding around the grid */
+    justify-content: center;
+  }
+  
+  .doctor-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 300px; /* Increased width */
+    min-height: 390px; /* Increased height */
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .doctor-image {
+    width: 100%;
+    height: 250px; /* Set a fixed height for the image */
+    object-fit: cover; /* Cover ensures the image covers the allotted area without distortion */
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+  }
+  
+  .card-body {
+    flex: 1; /* Allows the body to fill the space not taken by the image */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  
