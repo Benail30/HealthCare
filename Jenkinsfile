@@ -8,14 +8,14 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo "Checking out code..."
+                echo "Checking out code from SCM..."
                 checkout scm
             }
         }
 
         stage('Setup') {
             steps {
-                echo "Setting up environment..."
+                echo "Setting up build environment..."
                 script {
                     // Verify Docker is available
                     bat "docker --version"
@@ -25,26 +25,21 @@ pipeline {
                             docker compose version
                         )
                     """
-                }
-            }
-        }
-
-        stage('Cleanup') {
-            steps {
-                echo "Cleaning up old resources..."
-                dir('.') {
+                    
+                    // Clean up old containers and resources
+                    echo "Cleaning up previous resources..."
                     bat """
                         docker-compose down -v
                         if errorlevel 1 (
                             docker compose down -v
                         )
                     """
+                    bat """
+                        docker rm -f healthcare-mysql healthcare-backend healthcare-frontend
+                        if errorlevel 1 exit /b 0
+                    """
+                    bat "docker network prune -f"
                 }
-                bat """
-                    docker rm -f healthcare-mysql healthcare-backend healthcare-frontend
-                    if errorlevel 1 exit /b 0
-                """
-                bat "docker network prune -f"
             }
         }
 
@@ -52,17 +47,17 @@ pipeline {
             parallel {
                 stage('Backend Build') {
                     steps {
-                        echo "Building Backend..."
+                        echo "Building Backend Docker image..."
                         dir('server') {
-                            bat "docker build -t healthcare-backend:latest ."
+                            bat "docker build -t healthcare-backend:${env.BUILD_NUMBER} -t healthcare-backend:latest ."
                         }
                     }
                 }
                 stage('Frontend Build') {
                     steps {
-                        echo "Building Frontend..."
+                        echo "Building Frontend Docker image..."
                         dir('front') {
-                            bat "docker build -t healthcare-frontend:latest ."
+                            bat "docker build -t healthcare-frontend:${env.BUILD_NUMBER} -t healthcare-frontend:latest ."
                         }
                     }
                 }
@@ -71,69 +66,85 @@ pipeline {
 
         stage('Run (Docker)') {
             steps {
-                echo "Starting Containers..."
-                dir('.') {
-                    bat """
-                        docker-compose up -d
-                        if errorlevel 1 (
-                            docker compose up -d
-                        )
-                        if errorlevel 1 (
-                            echo Failed to start containers
-                            exit /b 1
-                        )
-                    """
-                }
-                echo "Waiting 60s for services to fully initialize..."
+                echo "Starting application containers..."
+                bat """
+                    docker-compose up -d
+                    if errorlevel 1 (
+                        docker compose up -d
+                    )
+                    if errorlevel 1 (
+                        echo Failed to start containers
+                        exit /b 1
+                    )
+                """
+                
+                echo "Waiting for services to initialize (60 seconds)..."
                 sleep 60
                 
-                // Check container status
+                echo "Verifying container status..."
                 bat "docker ps --filter name=healthcare"
             }
         }
 
-        stage('Smoke Tests') {
+        // Smoke Test stage: Performs basic health checks on running containers
+        // Tests backend API, frontend, and database connectivity
+        // Returns non-zero exit code if any service fails to respond
+        stage('Smoke Test') {
             steps {
+                echo "Running smoke tests to verify application health..."
                 script {
-                    echo "Running smoke tests..."
-                    
-                    // Test Backend - Check if it responds (any response is OK)
-                    echo "Testing Backend (Port 3002)..."
-                    bat """
-                        powershell -Command "try { Invoke-WebRequest -Uri http://localhost:3002 -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop | Out-Null; Write-Host '[PASS] Backend is responding'; exit 0 } catch { Write-Host '[WARN] Backend returned error but is running: ' (\$_.Exception.Message); exit 0 }"
-                    """
-                    
-                    // Test Frontend
-                    echo "Testing Frontend (Port 3000)..."
-                    bat """
-                        powershell -Command "try { Invoke-WebRequest -Uri http://localhost:3000 -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop | Out-Null; Write-Host '[PASS] Frontend is responding'; exit 0 } catch { Write-Host '[WARN] Frontend returned error but is running: ' (\$_.Exception.Message); exit 0 }"
-                    """
-                    
-                    echo "[SUCCESS] Smoke tests completed"
+                    // Detect OS and run appropriate smoke test script
+                    if (isUnix()) {
+                        // Linux/Mac: use shell script
+                        sh """
+                            chmod +x scripts/smoke-test-backend.sh scripts/smoke-test-frontend.sh
+                            ./scripts/smoke-test-backend.sh
+                            ./scripts/smoke-test-frontend.sh
+                        """
+                    } else {
+                        // Windows: use batch script
+                        bat "scripts\\smoke-test.bat"
+                    }
                 }
+                echo "Smoke tests completed successfully"
             }
         }
 
-
         stage('Archive Artifacts') {
             steps {
+                echo "Archiving build artifacts and logs..."
                 script {
-                    // Create deployment log
-                    dir('.') {
-                        bat """
-                            docker-compose logs > deployment.log 2>&1
-                            if errorlevel 1 (
-                                docker compose logs > deployment.log 2>&1
-                            )
-                        """
-                    }
+                    // Collect Docker logs
+                    bat """
+                        docker-compose logs > deployment-${env.BUILD_NUMBER}.log 2>&1
+                        if errorlevel 1 (
+                            docker compose logs > deployment-${env.BUILD_NUMBER}.log 2>&1
+                        )
+                    """
                     
                     // Create smoke test report
-                    bat "echo Smoke Tests: PASSED > smoke-test-report.txt"
+                    bat "echo Smoke Test Status: PASSED > smoke-test-report-${env.BUILD_NUMBER}.txt"
+                    bat "echo Build Number: ${env.BUILD_NUMBER} >> smoke-test-report-${env.BUILD_NUMBER}.txt"
+                    bat "echo Branch: ${env.BRANCH_NAME} >> smoke-test-report-${env.BUILD_NUMBER}.txt"
+                    bat "echo Timestamp: %date% %time% >> smoke-test-report-${env.BUILD_NUMBER}.txt"
                     
-                    // Archive artifacts
-                    archiveArtifacts artifacts: 'deployment.log, smoke-test-report.txt', allowEmptyArchive: true
+                    // For tagged builds (vX.Y.Z), save Docker images
+                    if (env.TAG_NAME?.startsWith('v')) {
+                        echo "Tagged build detected: ${env.TAG_NAME}"
+                        bat """
+                            docker save healthcare-backend:${env.BUILD_NUMBER} -o backend-${env.TAG_NAME}.tar
+                            docker save healthcare-frontend:${env.BUILD_NUMBER} -o frontend-${env.TAG_NAME}.tar
+                        """
+                        bat "echo Release Version: ${env.TAG_NAME} > release-info.txt"
+                        
+                        // Archive Docker images and release info
+                        archiveArtifacts artifacts: "deployment-${env.BUILD_NUMBER}.log, smoke-test-report-${env.BUILD_NUMBER}.txt, backend-${env.TAG_NAME}.tar, frontend-${env.TAG_NAME}.tar, release-info.txt", allowEmptyArchive: true
+                    } else {
+                        // Standard artifact archiving for PR and dev builds
+                        archiveArtifacts artifacts: "deployment-${env.BUILD_NUMBER}.log, smoke-test-report-${env.BUILD_NUMBER}.txt", allowEmptyArchive: true
+                    }
                 }
+                echo "Artifacts archived successfully"
             }
         }
     }
@@ -143,16 +154,29 @@ pipeline {
             echo "Pipeline completed. Status: ${currentBuild.result ?: 'SUCCESS'}"
         }
         success {
-            echo "Build succeeded!"
+            echo "✓ Build succeeded for branch: ${env.BRANCH_NAME ?: 'unknown'}"
         }
         failure {
-            echo "Build failed!"
-            // Optionally keep containers for debugging
-            // bat "docker-compose logs"
+            echo "✗ Build failed! Check logs for details."
+            bat "docker-compose logs"
         }
         cleanup {
             echo "Cleaning up workspace..."
+            // Keep containers running for debugging on dev, clean up on PRs
+            script {
+                if (env.CHANGE_ID) {
+                    // This is a PR build - clean up
+                    echo "PR build detected - cleaning up containers"
+                    bat """
+                        docker-compose down -v
+                        if errorlevel 1 (
+                            docker compose down -v
+                        )
+                    """
+                } else {
+                    echo "Non-PR build - containers left running for inspection"
+                }
+            }
         }
     }
 }
-
