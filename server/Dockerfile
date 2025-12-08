@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Generate Prisma Client
 RUN npx prisma generate
@@ -27,7 +27,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies including Prisma
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Generate Prisma Client for the correct platform
 RUN npx prisma generate
