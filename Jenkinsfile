@@ -9,7 +9,7 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo "Cleaning up old resources..."
-                sh "docker compose down -v || true" 
+                bat "docker compose down -v || exit 0"
             }
         }
 
@@ -18,13 +18,13 @@ pipeline {
                 stage('Backend Build') {
                     steps {
                         echo "Building Backend..."
-                        sh "docker compose build backend"
+                        bat "docker compose build backend"
                     }
                 }
                 stage('Frontend Build') {
                     steps {
                         echo "Building Frontend..."
-                        sh "docker compose build frontend"
+                        bat "docker compose build frontend"
                     }
                 }
             }
@@ -33,9 +33,9 @@ pipeline {
         stage('Start Environment') {
             steps {
                 echo "Starting Containers..."
-                sh "docker compose up -d"
+                bat "docker compose up -d"
                 echo "Waiting 30s for Database..."
-                sleep 30 
+                sleep 30
             }
         }
 
@@ -43,16 +43,17 @@ pipeline {
             steps {
                 script {
                     echo "Testing Backend (Port 3002)..."
-                    sh "curl -f http://localhost:3002/ || exit 1"
+                    bat "curl -f http://localhost:3002/ || exit /b 1"
+                    
                     echo "Testing Frontend (Port 3000)..."
-                    sh "curl -f http://localhost:3000/ || exit 1"
+                    bat "curl -f http://localhost:3000/ || exit /b 1"
                 }
             }
         }
 
         stage('Archive Logs') {
             steps {
-                sh "docker compose logs > deployment.log"
+                bat "docker compose logs > deployment.log"
                 archiveArtifacts artifacts: 'deployment.log', allowEmptyArchive: true
             }
         }
@@ -61,8 +62,9 @@ pipeline {
             when { tag "v*" }
             steps {
                 echo "RELEASE DETECTED: ${env.TAG_NAME}"
-                sh "docker tag healthcare-backend:latest healthcare-backend:${env.TAG_NAME}"
+                bat "docker tag healthcare-backend:latest healthcare-backend:${env.TAG_NAME}"
             }
         }
     }
 }
+
