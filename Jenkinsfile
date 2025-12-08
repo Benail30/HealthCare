@@ -5,14 +5,16 @@ pipeline {
         COMPOSE_PROJECT_NAME = "healthcare-${env.BUILD_NUMBER}"
     }
 
-    stages {
-        stage('Cleanup') {
-            steps {
-                echo "Cleaning up old resources..."
-                bat "docker compose down -v || exit 0"
-            }
-        }
-
+stage('Cleanup') {
+    steps {
+        echo "Cleaning up old resources..."
+        bat """
+            docker compose down -v || exit 0
+            docker rm -f healthcare-mysql healthcare-backend healthcare-frontend || exit 0
+            docker network prune -f || exit 0
+        """
+    }
+}
         stage('Build Images') {
             parallel {
                 stage('Backend Build') {
