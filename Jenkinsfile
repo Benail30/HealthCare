@@ -46,24 +46,75 @@ pipeline {
         }
 
         // Stage 3: Build Docker images in parallel for faster execution
+        // failFast: false allows both builds to complete even if one fails (helps debugging)
         stage('Build Images') {
             parallel {
                 stage('Backend Build') {
                     steps {
-                        echo "Building Backend Docker image..."
-                        dir('server') {
-                            bat "docker build -t healthcare-backend:${env.BUILD_NUMBER} -t healthcare-backend:latest ."
+                        script {
+                            echo "========================================="
+                            echo "Starting Backend Docker Build"
+                            echo "========================================="
+                            
+                            // Verify we're in the right location
+                            bat "cd"
+                            bat "dir server"
+                            
+                            echo "Checking for Dockerfile..."
+                            bat "if exist server\\Dockerfile (echo Dockerfile found) else (echo ERROR: Dockerfile not found && exit /b 1)"
+                            
+                            echo "Building Backend Docker image..."
+                            dir('server') {
+                                // Build with verbose output and error handling
+                                bat """
+                                    echo Current directory: %CD%
+                                    docker build --progress=plain -t healthcare-backend:${env.BUILD_NUMBER} -t healthcare-backend:latest . 2>&1
+                                    if errorlevel 1 (
+                                        echo ERROR: Backend Docker build failed!
+                                        docker images
+                                        exit /b 1
+                                    )
+                                """
+                            }
+                            
+                            // Verify the image was created
+                            bat "docker images | findstr healthcare-backend"
+                            echo "✓ Backend image built successfully"
                         }
-                        echo "Backend image built successfully"
                     }
                 }
                 stage('Frontend Build') {
                     steps {
-                        echo "Building Frontend Docker image..."
-                        dir('front') {
-                            bat "docker build -t healthcare-frontend:${env.BUILD_NUMBER} -t healthcare-frontend:latest ."
+                        script {
+                            echo "========================================="
+                            echo "Starting Frontend Docker Build"
+                            echo "========================================="
+                            
+                            // Verify we're in the right location
+                            bat "cd"
+                            bat "dir front"
+                            
+                            echo "Checking for Dockerfile..."
+                            bat "if exist front\\Dockerfile (echo Dockerfile found) else (echo ERROR: Dockerfile not found && exit /b 1)"
+                            
+                            echo "Building Frontend Docker image..."
+                            dir('front') {
+                                // Build with verbose output and error handling
+                                bat """
+                                    echo Current directory: %CD%
+                                    docker build --progress=plain -t healthcare-frontend:${env.BUILD_NUMBER} -t healthcare-frontend:latest . 2>&1
+                                    if errorlevel 1 (
+                                        echo ERROR: Frontend Docker build failed!
+                                        docker images
+                                        exit /b 1
+                                    )
+                                """
+                            }
+                            
+                            // Verify the image was created
+                            bat "docker images | findstr healthcare-frontend"
+                            echo "✓ Frontend image built successfully"
                         }
-                        echo "Frontend image built successfully"
                     }
                 }
             }
