@@ -137,11 +137,41 @@ pipeline {
                         """
                         bat "echo Release Version: ${env.TAG_NAME} > release-info.txt"
                         
-                        // Archive Docker images and release info
-                        archiveArtifacts artifacts: "deployment-${env.BUILD_NUMBER}.log, smoke-test-report-${env.BUILD_NUMBER}.txt, backend-${env.TAG_NAME}.tar, frontend-${env.TAG_NAME}.tar, release-info.txt", allowEmptyArchive: true
+                        // Archive Docker images, build outputs, logs, and smoke test results
+                        archiveArtifacts artifacts: """
+                            deployment-${env.BUILD_NUMBER}.log,
+                            smoke-test-report-${env.BUILD_NUMBER}.txt,
+                            backend-${env.TAG_NAME}.tar,
+                            frontend-${env.TAG_NAME}.tar,
+                            release-info.txt,
+                            front/.next/**/*.js,
+                            front/.next/**/*.css,
+                            front/.next/**/*.html,
+                            front/.next/static/**,
+                            server/logs/**,
+                            **/http_response.txt,
+                            **/smoke_test*.log,
+                            **/temp_status.txt
+                        """.replaceAll(/\s+/, ' ').trim(), 
+                        fingerprint: true, 
+                        allowEmptyArchive: true
                     } else {
                         // Standard artifact archiving for PR and dev builds
-                        archiveArtifacts artifacts: "deployment-${env.BUILD_NUMBER}.log, smoke-test-report-${env.BUILD_NUMBER}.txt", allowEmptyArchive: true
+                        // Includes frontend build output, backend logs, and smoke test results
+                        archiveArtifacts artifacts: """
+                            deployment-${env.BUILD_NUMBER}.log,
+                            smoke-test-report-${env.BUILD_NUMBER}.txt,
+                            front/.next/**/*.js,
+                            front/.next/**/*.css,
+                            front/.next/**/*.html,
+                            front/.next/static/**,
+                            server/logs/**,
+                            **/http_response.txt,
+                            **/smoke_test*.log,
+                            **/temp_status.txt
+                        """.replaceAll(/\s+/, ' ').trim(), 
+                        fingerprint: true, 
+                        allowEmptyArchive: true
                     }
                 }
                 echo "Artifacts archived successfully"
