@@ -127,8 +127,8 @@ pipeline {
                 
                 bat """
                     REM Stop and remove any previous stack/containers
-                    docker-compose down || echo No existing stack to remove
-                    docker rm -f healthcare-mysql || echo No old mysql container
+                    docker-compose down -v 2>nul || echo No existing stack to remove
+                    docker rm -f healthcare-mysql healthcare-backend healthcare-frontend 2>nul || echo Containers already removed
                     
                     REM Start fresh containers
                     docker-compose up -d
