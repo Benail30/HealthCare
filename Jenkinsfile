@@ -122,33 +122,32 @@ pipeline {
 
         // Stage 4: Start all application containers
         stage('Start Environment') {
-    steps {
-        echo "Starting application environment with docker-compose..."
-
-        bat """
-            REM Stop and remove any previous stack/containers
-            docker-compose down || echo No existing stack to remove
-            docker rm -f healthcare-mysql || echo No old mysql container
-
-            REM Start fresh containers
-            docker-compose up -d
-            if errorlevel 1 (
-                docker compose up -d
-            )
-            if errorlevel 1 (
-                echo Failed to start containers
-                exit /b 1
-            )
-        """
-
-        echo "Waiting for services to initialize (60 seconds)..."
-        sleep 60
-
-        echo "Verifying container status..."
-        bat "docker ps --filter name=healthcare"
-        echo "Environment started successfully"
-    }
-}
+            steps {
+                echo "Starting application environment with docker-compose..."
+                
+                bat """
+                    REM Stop and remove any previous stack/containers
+                    docker-compose down || echo No existing stack to remove
+                    docker rm -f healthcare-mysql || echo No old mysql container
+                    
+                    REM Start fresh containers
+                    docker-compose up -d
+                    if errorlevel 1 (
+                        docker compose up -d
+                    )
+                    if errorlevel 1 (
+                        echo Failed to start containers
+                        exit /b 1
+                    )
+                """
+                
+                echo "Waiting for services to initialize (60 seconds)..."
+                sleep 60
+                
+                echo "Verifying container status..."
+                bat "docker ps --filter name=healthcare"
+                echo "Environment started successfully"
+            }
         }
 
         // Stage 5: Run smoke tests to verify application health
