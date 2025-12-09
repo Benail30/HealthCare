@@ -212,11 +212,17 @@ pipeline {
                         if not exist "artifacts" mkdir artifacts
                         if not exist "artifacts\\frontend" mkdir artifacts\\frontend
                         
-                        REM Extract .next build directory from frontend container
-                        docker cp healthcare-frontend:/app/.next artifacts\\frontend\\.next || echo Frontend .next not found
+                        REM Extract .next build directory from frontend container (ignore errors)
+                        docker cp healthcare-frontend:/app/.next artifacts\\frontend\\.next 2>nul || (
+                            echo [INFO] Frontend .next not found - skipping
+                            exit /b 0
+                        )
                         
-                        REM Also extract static files
-                        docker cp healthcare-frontend:/app/public artifacts\\frontend\\public || echo Frontend public not found
+                        REM Extract static files (ignore errors)
+                        docker cp healthcare-frontend:/app/public artifacts\\frontend\\public 2>nul || (
+                            echo [INFO] Frontend public not found - skipping
+                            exit /b 0
+                        )
                     """
                     
                     echo "Extracting backend logs from Docker container..."
@@ -224,16 +230,27 @@ pipeline {
                         REM Create backend artifacts directory
                         if not exist "artifacts\\backend" mkdir artifacts\\backend
                         
-                        REM Try to extract any logs from backend container
-                        docker cp healthcare-backend:/app/logs artifacts\\backend\\logs || echo Backend logs not found
+                        REM Try to extract any logs from backend container (ignore errors)
+                        docker cp healthcare-backend:/app/logs artifacts\\backend\\logs 2>nul || (
+                            echo [INFO] Backend logs not found - skipping
+                            exit /b 0
+                        )
                     """
                     
                     // Copy smoke test artifacts if they exist
                     bat """
-                        REM Copy smoke test results to artifacts folder
-                        if exist "temp_status.txt" copy temp_status.txt artifacts\\ || echo No temp_status.txt
-                        if exist "http_response.txt" copy http_response.txt artifacts\\ || echo No http_response.txt
-                        if exist "scripts\\temp_status.txt" copy scripts\\temp_status.txt artifacts\\ || echo No scripts temp_status.txt
+                        REM Copy smoke test results to artifacts folder (ignore errors)
+                        if exist "temp_status.txt" (
+                            copy temp_status.txt artifacts\\ >nul 2>&1
+                        )
+                        if exist "http_response.txt" (
+                            copy http_response.txt artifacts\\ >nul 2>&1
+                        )
+                        if exist "scripts\\temp_status.txt" (
+                            copy scripts\\temp_status.txt artifacts\\ >nul 2>&1
+                        )
+                        REM Always succeed
+                        exit /b 0
                     """
                     
                     // List what we collected
