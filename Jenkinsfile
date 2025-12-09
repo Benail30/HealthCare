@@ -122,26 +122,33 @@ pipeline {
 
         // Stage 4: Start all application containers
         stage('Start Environment') {
-            steps {
-                echo "Starting application environment with docker-compose..."
-                bat """
-                    docker-compose up -d
-                    if errorlevel 1 (
-                        docker compose up -d
-                    )
-                    if errorlevel 1 (
-                        echo Failed to start containers
-                        exit /b 1
-                    )
-                """
-                
-                echo "Waiting for services to initialize (60 seconds)..."
-                sleep 60
-                
-                echo "Verifying container status..."
-                bat "docker ps --filter name=healthcare"
-                echo "Environment started successfully"
-            }
+    steps {
+        echo "Starting application environment with docker-compose..."
+
+        bat """
+            REM Stop and remove any previous stack/containers
+            docker-compose down || echo No existing stack to remove
+            docker rm -f healthcare-mysql || echo No old mysql container
+
+            REM Start fresh containers
+            docker-compose up -d
+            if errorlevel 1 (
+                docker compose up -d
+            )
+            if errorlevel 1 (
+                echo Failed to start containers
+                exit /b 1
+            )
+        """
+
+        echo "Waiting for services to initialize (60 seconds)..."
+        sleep 60
+
+        echo "Verifying container status..."
+        bat "docker ps --filter name=healthcare"
+        echo "Environment started successfully"
+    }
+}
         }
 
         // Stage 5: Run smoke tests to verify application health
@@ -199,20 +206,49 @@ pipeline {
                         echo   - Database Connectivity Check >> smoke-test-report-${env.BUILD_NUMBER}.txt
                     """
                     
-                    // Archive all build artifacts with comprehensive glob patterns
-                    // This includes: deployment logs, smoke test results, frontend build output, and backend logs
+                    // Extract build artifacts from Docker containers
+                    echo "Extracting frontend build output from Docker container..."
+                    bat """
+                        REM Create artifacts directory
+                        if not exist "artifacts" mkdir artifacts
+                        if not exist "artifacts\\frontend" mkdir artifacts\\frontend
+                        
+                        REM Extract .next build directory from frontend container
+                        docker cp healthcare-frontend:/app/.next artifacts\\frontend\\.next || echo Frontend .next not found
+                        
+                        REM Also extract static files
+                        docker cp healthcare-frontend:/app/public artifacts\\frontend\\public || echo Frontend public not found
+                    """
+                    
+                    echo "Extracting backend logs from Docker container..."
+                    bat """
+                        REM Create backend artifacts directory
+                        if not exist "artifacts\\backend" mkdir artifacts\\backend
+                        
+                        REM Try to extract any logs from backend container
+                        docker cp healthcare-backend:/app/logs artifacts\\backend\\logs || echo Backend logs not found
+                    """
+                    
+                    // Copy smoke test artifacts if they exist
+                    bat """
+                        REM Copy smoke test results to artifacts folder
+                        if exist "temp_status.txt" copy temp_status.txt artifacts\\ || echo No temp_status.txt
+                        if exist "http_response.txt" copy http_response.txt artifacts\\ || echo No http_response.txt
+                        if exist "scripts\\temp_status.txt" copy scripts\\temp_status.txt artifacts\\ || echo No scripts temp_status.txt
+                    """
+                    
+                    // List what we collected
+                    echo "Artifacts collected:"
+                    bat "if exist artifacts dir /s artifacts"
+                    
+                    // Archive all collected artifacts
                     archiveArtifacts artifacts: """
                         deployment-${env.BUILD_NUMBER}.log,
                         smoke-test-report-${env.BUILD_NUMBER}.txt,
-                        front/.next/**/*.js,
-                        front/.next/**/*.css,
-                        front/.next/**/*.html,
-                        front/.next/static/**,
-                        front/.next/server/**,
-                        server/logs/**,
+                        artifacts/**/*,
+                        **/temp_status.txt,
                         **/http_response.txt,
-                        **/smoke_test*.log,
-                        **/temp_status.txt
+                        **/smoke_test*.log
                     """.replaceAll(/\s+/, ' ').trim(), 
                     fingerprint: true, 
                     allowEmptyArchive: true
